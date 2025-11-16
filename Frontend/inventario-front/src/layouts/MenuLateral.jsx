@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-
+import "./menu.css";
 
 export default function MenuLateral() {
   const { user, logout } = useAuth();
@@ -32,11 +32,11 @@ export default function MenuLateral() {
         </div>
 
         <nav className="menu-opciones">
-          <Link to="clientes" className="opcion">👤 Clientes</Link>
-          <Link to="empleados" className="opcion">🧑‍💼 Empleados</Link>
-          <Link to="productos" className="opcion">🛒 Productos</Link>
-          <Link to="ventas" className="opcion">💵 Ventas</Link>
-          <Link to="reportes" className="opcion">📊 Reporte Ventas</Link>
+          <Link to="/clientes" className="opcion">👤 Clientes</Link>
+          <Link to="/empleados" className="opcion">🧑‍💼 Empleados</Link>
+          <Link to="/productos" className="opcion">🛒 Productos</Link>
+          <Link to="/ventas" className="opcion">💵 Ventas</Link>
+          <Link to="/reportes" className="opcion">📊 Reporte Ventas</Link>
         </nav>
 
         {/* Botón de logout */}
@@ -49,7 +49,7 @@ export default function MenuLateral() {
       <div className="contenido">
         <header className="topbar">
           <div className="top-left">
-            <h1 className="brand">ANIMALPRINT PETSTYLE 🐾</h1>
+            <h1 className="brand">ANIMALPRINT PETSTOCK 🐾</h1>
           </div>
           <div className="top-right">
             <p>{fecha}</p>

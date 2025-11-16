@@ -21,7 +21,7 @@ const LoginPage = () => {
   return (
     <div className="login-container">
 
-      <h1 className="titulo-principal">ANIMALPRINT PETSTYLE</h1>
+      <h1 className="titulo-principal">ANIMALPRINT PETSTOCK</h1>
 
       <div className="login-box">
         <h2>Inicio Sesión</h2>

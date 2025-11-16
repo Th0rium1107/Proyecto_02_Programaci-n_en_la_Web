@@ -56,7 +56,7 @@ const MenuPage = () => {
       {/* Contenido principal */}
       <main className="contenido">
         <div className="header-content">
-          <h1>ANIMALPRINT PETSTYLE 🐾</h1>
+          <h1>ANIMALPRINT PETSTOCK 🐾</h1>
           <p className="info-date">
             {new Date().toLocaleDateString("es-ES")} - {new Date().toLocaleTimeString("es-ES")}
           </p>
@@ -65,7 +65,7 @@ const MenuPage = () => {
 
         <div className="panel-content">
           <h2>Panel Principal</h2>
-          <p>Bienvenido a ANIMALPRINT PETSTYLE</p>
+          <p>Bienvenido a ANIMALPRINT PETSTOCK</p>
           <p>Selecciona una opción del menú para comenzar.</p>
         </div>
       </main>

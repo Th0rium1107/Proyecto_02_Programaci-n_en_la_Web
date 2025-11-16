@@ -1,25 +1,26 @@
+/* ==================== RESET GLOBAL ==================== */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body {
+html, body, #root {
   width: 100%;
   height: 100%;
 }
 
-#root {
-  width: 100%;
-  height: 100%;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
-/* Contenedor principal */
+/* ==================== CONTENEDOR PRINCIPAL ==================== */
 .menu-container {
   display: flex;
   width: 100%;
   height: 100vh;
   background: #f5f5f5;
+  overflow: hidden;
 }
 
 /* ==================== SIDEBAR ==================== */
@@ -38,7 +39,7 @@ html, body {
   overflow-y: auto;
 }
 
-/* Sección de perfil */
+/* Perfil */
 .perfil {
   text-align: center;
   width: 100%;
@@ -62,6 +63,7 @@ html, body {
   font-size: 20px;
   font-weight: 700;
   margin-bottom: 5px;
+  color: white;
 }
 
 .nombre {
@@ -70,6 +72,7 @@ html, body {
   word-break: break-word;
   margin-bottom: 5px;
   display: block;
+  color: white;
 }
 
 .rol {
@@ -77,15 +80,17 @@ html, body {
   opacity: 0.9;
   display: block;
   font-style: italic;
+  color: white;
 }
 
-/* Menú de opciones */
+/* Menu opciones */
 .menu-opciones {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 10px;
   flex: 1;
+  list-style: none;
 }
 
 .opcion {
@@ -114,7 +119,7 @@ html, body {
   transform: translateX(3px);
 }
 
-/* Botón de logout en sidebar */
+/* Botón logout */
 .btn-logout-sidebar {
   width: 100%;
   background: #ff6b6b;
@@ -146,9 +151,10 @@ html, body {
   flex-direction: column;
   overflow: hidden;
   width: 100%;
+  height: 100vh;
 }
 
-/* Top bar / Header */
+/* Topbar */
 .topbar {
   background: white;
   padding: 20px 40px;
@@ -201,48 +207,141 @@ html, body {
 .contenido-principal {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 40px;
+  width: 100%;
 }
 
-/* Panel de contenido */
-.panel-content {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+/* ==================== CLIENTES PAGE ==================== */
+.clientes-container {
+  width: 100%;
 }
 
-.panel-content h2 {
-  color: #0a8a6a;
+.titulo {
   font-size: 32px;
-  font-weight: 700;
-  margin: 0;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #0a8a6a;
 }
 
-.panel-content p {
-  color: #666;
+.acciones-superiores {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.btn-agregar {
+  background: #0a8a6a;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
   font-size: 16px;
-  line-height: 1.8;
-  margin: 0;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-agregar:hover {
+  background: #097559;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Tabla */
+.tabla-clientes {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tabla-clientes thead {
+  background: #0a8a6a;
+  color: white;
+  font-weight: 600;
+}
+
+.tabla-clientes th {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 2px solid #0a8a6a;
+}
+
+.tabla-clientes td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tabla-clientes tbody tr:hover {
+  background: #f9f9f9;
+}
+
+.tabla-clientes tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Acciones */
+.acciones {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-editar,
+.btn-borrar {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: 0.2s;
+}
+
+.btn-editar {
+  background: #ffd966;
+  color: black;
+}
+
+.btn-editar:hover {
+  background: #ffcd38;
+  transform: scale(1.1);
+}
+
+.btn-borrar {
+  background: #ff6b6b;
+  color: white;
+}
+
+.btn-borrar:hover {
+  background: #ff4d4d;
+  transform: scale(1.1);
+}
+
+/* Mensajes */
+.cargando,
+.sin-datos {
+  text-align: center;
+  padding: 20px;
+  font-size: 18px;
+  color: #666;
+  background: white;
+  border-radius: 8px;
+}
+
+.error {
+  background: #ffe6e6;
+  color: #d32f2f;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #d32f2f;
+  font-weight: 500;
 }
 
 /* ==================== RESPONSIVE ==================== */
-@media (max-width: 1024px) {
-  .topbar {
-    flex-wrap: wrap;
-    gap: 15px;
-  }
-
-  .top-right {
-    gap: 15px;
-    order: 3;
-    width: 100%;
-  }
-
-  .brand {
-    font-size: 24px;
-  }
-}
-
 @media (max-width: 768px) {
   .menu-container {
     flex-direction: column;
@@ -255,14 +354,12 @@ html, body {
     flex-wrap: wrap;
     padding: 15px;
     gap: 10px;
-    justify-content: space-between;
   }
 
   .perfil {
     display: flex;
     align-items: center;
     gap: 15px;
-    margin-bottom: 0;
     text-align: left;
   }
 
@@ -273,19 +370,11 @@ html, body {
     margin: 0;
   }
 
-  .perfil h3,
-  .nombre,
-  .rol {
-    margin: 0;
-    font-size: 14px;
-  }
-
   .menu-opciones {
     order: 3;
     width: 100%;
     flex-direction: row;
     flex-wrap: wrap;
-    margin: 0;
   }
 
   .opcion {
@@ -301,10 +390,6 @@ html, body {
     margin-top: 10px;
   }
 
-  .contenido {
-    height: auto;
-  }
-
   .topbar {
     padding: 15px 20px;
     flex-direction: column;
@@ -315,20 +400,11 @@ html, body {
     font-size: 22px;
   }
 
-  .top-right {
-    width: 100%;
-    order: 2;
-  }
-
   .contenido-principal {
     padding: 20px;
   }
 
-  .panel-content h2 {
+  .titulo {
     font-size: 24px;
-  }
-
-  .panel-content p {
-    font-size: 14px;
   }
 }

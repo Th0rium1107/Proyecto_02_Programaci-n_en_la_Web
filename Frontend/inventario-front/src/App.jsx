@@ -9,7 +9,9 @@ const PrivateRoute = ({ children }) => {
     const { user, isLoading } = useAuth();
     
     if (isLoading) {
-        return <div className="text-center p-8">Cargando...</div>; 
+        return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+            <p>Cargando...</p>
+        </div>; 
     }
     
     return user ? children : <Navigate to="/login" />;
@@ -18,7 +20,7 @@ const PrivateRoute = ({ children }) => {
 function App() {
     return (
         <Routes>
-            {/* Login */}
+            {/* Login - sin protección */}
             <Route path="/login" element={<LoginPage />} />
 
             {/* Layout protegido con menú lateral */}
@@ -31,11 +33,12 @@ function App() {
                 }
             >
                 {/* Rutas anidadas dentro del layout */}
+                <Route index element={<div style={{ padding: '20px' }}><h2>Panel Principal</h2><p>Bienvenido a ANIMALPRINT PETSTYLE</p></div>} />
                 <Route path="clientes" element={<ClientesPage />} />
-                <Route path="empleados" element={<div>Empleados funcionando ✔</div>} />
-                <Route path="productos" element={<div>Productos ✔</div>} />
-                <Route path="ventas" element={<div>Ventas ✔</div>} />
-                <Route path="reportes" element={<div>Reportes ✔</div>} />
+                <Route path="empleados" element={<div style={{ padding: '20px' }}><h2>Empleados</h2><p>Empleados funcionando ✔</p></div>} />
+                <Route path="productos" element={<div style={{ padding: '20px' }}><h2>Productos</h2><p>Productos ✔</p></div>} />
+                <Route path="ventas" element={<div style={{ padding: '20px' }}><h2>Ventas</h2><p>Ventas ✔</p></div>} />
+                <Route path="reportes" element={<div style={{ padding: '20px' }}><h2>Reporte Ventas</h2><p>Reportes ✔</p></div>} />
             </Route>
 
             {/* Catch-all - redirige a home */}

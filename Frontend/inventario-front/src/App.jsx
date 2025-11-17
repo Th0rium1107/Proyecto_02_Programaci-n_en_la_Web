@@ -1,30 +1,63 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+
+// Páginas
 import LoginPage from './pages/LoginPage';
 import MenuLateral from "./layouts/MenuLateral";
 import ClientesPage from "./pages/ClientesPage";
 import EmpleadosPage from './pages/EmpleadosPage';
+import ProductosPage from './pages/ProductosPage';
+import CategoriasPage from './pages/CategoriasPage';
+import ColeccionesPage from './pages/ColeccionesPage';
 
 // Componente para proteger las rutas
 const PrivateRoute = ({ children }) => {
     const { user, isLoading } = useAuth();
     
     if (isLoading) {
-        return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-            <p>Cargando...</p>
-        </div>; 
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <p>Cargando...</p>
+            </div>
+        );
     }
     
     return user ? children : <Navigate to="/login" />;
 };
 
+// Componente para proteger rutas solo de admin
+const AdminRoute = ({ children }) => {
+    const { user, isAdmin, isLoading } = useAuth();
+    
+    if (isLoading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <p>Cargando...</p>
+            </div>
+        ); 
+    }
+    
+    if (!user) return <Navigate to="/login" />;
+    if (!isAdmin) return <Navigate to="/" />;
+    
+    return children;
+};
+
+// Página de acceso denegado
+const AccesoDenegado = () => (
+    <div style={{ padding: '40px', textAlign: 'center' }}>
+        <h2 style={{ color: '#d32f2f', marginBottom: '20px' }}>❌ Acceso Denegado</h2>
+        <p>No tienes permisos para acceder a esta sección.</p>
+    </div>
+);
+
 function App() {
     return (
         <Routes>
-            {/* Login - sin protección */}
+            {/* Login sin protección */}
             <Route path="/login" element={<LoginPage />} />
 
-            {/* Layout protegido con menú lateral */}
+            {/* Layout principal con menú lateral */}
             <Route 
                 path="/" 
                 element={
@@ -33,16 +66,87 @@ function App() {
                     </PrivateRoute>
                 }
             >
-                {/* Rutas anidadas dentro del layout */}
-                <Route index element={<div style={{ padding: '20px' }}><h2>Panel Principal</h2><p>Bienvenido a ANIMALPRINT PETSTYLE</p></div>} />
+                {/* Home */}
+                <Route 
+                    index 
+                    element={
+                        <div style={{ padding: '20px' }}>
+                            <h2>Panel Principal</h2>
+                            <p>Bienvenido a ANIMALPRINT PETSTOCK</p>
+                        </div>
+                    } 
+                />
+
+                {/* Rutas accesibles para todos */}
                 <Route path="clientes" element={<ClientesPage />} />
-                <Route path="empleados" element={<EmpleadosPage />} />
-                <Route path="productos" element={<div style={{ padding: '20px' }}><h2>Productos</h2><p>Productos ✔</p></div>} />
-                <Route path="ventas" element={<div style={{ padding: '20px' }}><h2>Ventas</h2><p>Ventas ✔</p></div>} />
-                <Route path="reportes" element={<div style={{ padding: '20px' }}><h2>Reporte Ventas</h2><p>Reportes ✔</p></div>} />
+                <Route 
+                    path="ventas" 
+                    element={
+                        <div style={{ padding: '20px' }}>
+                            <h2>💵 Ventas</h2>
+                            <p>Gestión de ventas ✓</p>
+                        </div>
+                    } 
+                />
+
+                {/* --- Rutas EXCLUSIVAS para admin --- */}
+
+                {/* Empleados */}
+                <Route 
+                    path="empleados" 
+                    element={
+                        <AdminRoute>
+                            <EmpleadosPage />
+                        </AdminRoute>
+                    } 
+                />
+
+                {/* Productos */}
+                <Route 
+                    path="productos" 
+                    element={
+                        <AdminRoute>
+                            <ProductosPage />
+                        </AdminRoute>
+                    } 
+                />
+
+                <Route 
+                path="categorias" 
+                element={
+                    <AdminRoute>
+                    <CategoriasPage />
+                    </AdminRoute>
+                } 
+                />
+
+                <Route 
+                path="colecciones" 
+                element={
+                    <AdminRoute>
+                    <ColeccionesPage />
+                    </AdminRoute>
+                } 
+                />
+
+                {/* Reportes */}
+                <Route 
+                    path="reportes" 
+                    element={
+                        <AdminRoute>
+                            <div style={{ padding: '20px' }}>
+                                <h2>📊 Reporte Ventas</h2>
+                                <p>Reportes de ventas ✓</p>
+                            </div>
+                        </AdminRoute>
+                    } 
+                />
+
+                {/* Acceso denegado */}
+                <Route path="acceso-denegado" element={<AccesoDenegado />} />
             </Route>
 
-            {/* Catch-all - redirige a home */}
+            {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" />} />
         </Routes>
     );

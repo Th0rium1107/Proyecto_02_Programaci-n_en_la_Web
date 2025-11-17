@@ -193,14 +193,39 @@ body {
   font-weight: 500;
 }
 
-.admin-tag {
-  background: #0a8a6a;
-  color: white;
-  padding: 6px 14px;
+/* ===== ROLE TAG ===== */
+.role-tag {
+  display: inline-block;
+  padding: 8px 16px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
+  transition: all 0.2s ease;
+}
+
+.role-tag.admin {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  color: #e65100;
+  border: 2px solid #ffb74d;
+  box-shadow: 0 2px 8px rgba(230, 81, 0, 0.2);
+}
+
+.role-tag.admin:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(230, 81, 0, 0.3);
+}
+
+.role-tag.empleado {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  color: #2e7d32;
+  border: 2px solid #66bb6a;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.2);
+}
+
+.role-tag.empleado:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
 }
 
 /* Contenido principal */
@@ -339,6 +364,11 @@ body {
   margin-bottom: 20px;
   border-left: 4px solid #d32f2f;
   font-weight: 500;
+}
+
+/* ==================== MODAL GRANDE ==================== */
+.modal-lg {
+  max-width: 600px !important;
 }
 
 /* ==================== RESPONSIVE ==================== */

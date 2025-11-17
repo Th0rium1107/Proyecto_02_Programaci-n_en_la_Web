@@ -11,13 +11,14 @@ export default function AgregarEmpleadoModal({ isOpen, onClose, onEmpleadoAgrega
       password: "",
     },
     telefono: "",
+    is_staff: false,
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     
     if (name.startsWith("user_")) {
       const fieldName = name.replace("user_", "");
@@ -27,6 +28,11 @@ export default function AgregarEmpleadoModal({ isOpen, onClose, onEmpleadoAgrega
           ...prev.user,
           [fieldName]: value
         }
+      }));
+    } else if (name === "is_staff") {
+      setFormData(prev => ({
+        ...prev,
+        [name]: checked
       }));
     } else {
       setFormData(prev => ({
@@ -42,7 +48,7 @@ export default function AgregarEmpleadoModal({ isOpen, onClose, onEmpleadoAgrega
     setError(null);
 
     try {
-      console.log("📤 Enviando datos:", formData);
+      console.log("🤝 Enviando datos:", formData);
       
       const response = await inventarioApi.post("/empleados/", formData);
       console.log("✅ Empleado agregado:", response.data);
@@ -56,6 +62,7 @@ export default function AgregarEmpleadoModal({ isOpen, onClose, onEmpleadoAgrega
           password: "",
         },
         telefono: "",
+        is_staff: false,
       });
       
       // Notificar al padre
@@ -148,6 +155,46 @@ export default function AgregarEmpleadoModal({ isOpen, onClose, onEmpleadoAgrega
             />
           </div>
 
+          {/* Teléfono */}
+          <div className="form-group">
+            <label htmlFor="telefono">Teléfono *</label>
+            <input
+              type="tel"
+              id="telefono"
+              name="telefono"
+              value={formData.telefono}
+              onChange={handleChange}
+              placeholder="Ej: 3005551234"
+              required
+            />
+          </div>
+
+          {/* Rol de Usuario */}
+          <div className="form-group">
+            <label htmlFor="is_staff">Rol de Usuario</label>
+            <select
+              id="is_staff"
+              name="is_staff"
+              value={formData.is_staff ? "true" : "false"}
+              onChange={(e) => setFormData(prev => ({
+                ...prev,
+                is_staff: e.target.value === "true"
+              }))}
+              style={{
+                padding: '12px 14px',
+                border: '2px solid #e0e0e0',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <option value="false">👤 Usuario</option>
+              <option value="true">👨‍💼 Admin</option>
+            </select>
+          </div>
+
           {/* Botones */}
           <div className="modal-buttons">
             <button
@@ -163,7 +210,7 @@ export default function AgregarEmpleadoModal({ isOpen, onClose, onEmpleadoAgrega
               className="btn-guardar"
               disabled={loading}
             >
-              {loading ? "Guardando..." : "✓ Guardar Empleado"}
+              {loading ? "Guardando..." : "✔ Guardar Empleado"}
             </button>
           </div>
         </form>

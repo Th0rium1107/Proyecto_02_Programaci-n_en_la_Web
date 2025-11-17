@@ -1,9 +1,11 @@
 from django.db import models
+from django.utils import timezone
+from django.contrib.auth.models import User
 
-# Create your models here.
 
-#Modelo para las categorias de los productos. Esto permite que la
-# administradora pueda camiar estas categorias en el futuro si lo desea
+# ==========================================
+# CATEGORÍAS
+# ==========================================
 class Categoria(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(blank=True)
@@ -14,10 +16,13 @@ class Categoria(models.Model):
     class Meta:
         verbose_name_plural = "Categorías"
 
-#Modelo para las colecciones de productos. Esto permite agrupar productos
+
+# ==========================================
+# COLECCIONES
+# ==========================================
 class Coleccion(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
-    temporada = models.CharField(max_length=50, blank=True)  # Ej: "Invierno 2024"
+    temporada = models.CharField(max_length=50, blank=True)
     
     def __str__(self):
         return self.nombre
@@ -25,8 +30,30 @@ class Coleccion(models.Model):
     class Meta:
         verbose_name_plural = "Colecciones"
 
-#Modelo para los productos en el inventario
+
+# ==========================================
+# EMPLEADOS (asociados a User)
+# ==========================================
+class Empleado(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    telefono = models.CharField(max_length=20, blank=True)
+    fecha_contratacion = models.DateField()
+    activo = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name}"
+
+
+# ==========================================
+# PRODUCTOS - CON COLORES
+# ==========================================
 class Producto(models.Model):
+    ESTADO_CHOICES = [
+        ('en_stock', 'En Stock'),
+        ('bajo_stock', 'Stock Bajo'),
+        ('agotado', 'Agotado'),
+    ]
+    
     # Información básica
     nombre = models.CharField(max_length=200)
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT)
@@ -34,6 +61,7 @@ class Producto(models.Model):
     
     # Detalles
     tallas = models.CharField(max_length=100, help_text="Ej: S,M,L,XL")
+    colores = models.CharField(max_length=200, help_text="Ej: Rojo,Azul,Negro,Blanco", blank=True)
     descripcion = models.TextField(blank=True)
     imagen = models.ImageField(upload_to='productos/', null=True, blank=True)
     
@@ -51,6 +79,16 @@ class Producto(models.Model):
         return self.nombre
     
     @property
+    def estado(self):
+        """Retorna el estado del producto"""
+        if self.stock_actual == 0:
+            return 'agotado'
+        elif self.stock_actual <= self.stock_minimo:
+            return 'bajo_stock'
+        else:
+            return 'en_stock'
+    
+    @property
     def stock_bajo(self):
         """Retorna True si el stock está por debajo del mínimo"""
         return self.stock_actual <= self.stock_minimo
@@ -60,71 +98,25 @@ class Producto(models.Model):
         """Retorna True si no hay stock"""
         return self.stock_actual == 0
     
+    @property
+    def lista_colores(self):
+        """Retorna una lista de colores separados"""
+        if self.colores:
+            return [color.strip() for color in self.colores.split(',')]
+        return []
+    
+    @property
+    def cantidad_colores(self):
+        """Retorna la cantidad de colores disponibles"""
+        return len(self.lista_colores)
+    
     class Meta:
         ordering = ['nombre']
 
 
-#Informacion para las ventas realizadas
-class Venta(models.Model):
-    CANAL_CHOICES = [
-        ('nequi', 'Nequi'),
-        ('daviplata', 'Daviplata'),
-        ('bancolombia', 'Bancolombia'),
-        ('presencial', 'Presencial (Efectivo)'),
-        ('tarjeta', 'Tarjeta'),
-    ]
-    
-    # Información de la venta
-    fecha = models.DateTimeField(auto_now_add=True)
-    canal_venta = models.CharField(max_length=20, choices=CANAL_CHOICES)
-    
-    # Cliente opcional (solo para clientes frecuentes/mayoristas) Por el momento no los vamos a usar
-    #cliente = models.ForeignKey('Cliente', on_delete=models.SET_NULL, null=True, blank=True)
-    #Empleado que registró la venta.
-    empleado = models.ForeignKey('Empleado', on_delete=models.PROTECT)
-    
-    # Totales
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    descuento = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
-    
-    # Notas adicionales
-    notas = models.TextField(blank=True)
-    
-    def __str__(self):
-        return f"Venta #{self.id} - {self.fecha.strftime('%d/%m/%Y')}"
-    
-    class Meta:
-        ordering = ['-fecha']
-
-
-class DetalleVenta(models.Model):
-    """Cada producto vendido en una venta (línea de la factura)"""
-    venta = models.ForeignKey(Venta, on_delete=models.CASCADE, related_name='detalles')
-    producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
-    
-    cantidad = models.IntegerField()
-    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
-    
-    def save(self, *args, **kwargs):
-        # Calcula el subtotal automáticamente
-        self.subtotal = self.cantidad * self.precio_unitario
-        
-        # Descuenta del inventario
-        if not self.pk:  # Solo al crear (no al editar)
-            self.producto.stock_actual -= self.cantidad
-            self.producto.save()
-        
-        super().save(*args, **kwargs)
-    
-    def __str__(self):
-        return f"{self.producto.nombre} x{self.cantidad}"
-    
-
-from django.db import models
-from django.utils import timezone
-
+# ==========================================
+# MOVIMIENTOS DE INVENTARIO
+# ==========================================
 class MovimientoInventario(models.Model):
     TIPO_CHOICES = [
         ('entrada', 'Entrada (Compra/Reposición)'),
@@ -134,7 +126,7 @@ class MovimientoInventario(models.Model):
     ]
     
     producto = models.ForeignKey(
-        'Producto',
+        Producto,
         on_delete=models.PROTECT,
         related_name='movimientos'
     )
@@ -142,14 +134,13 @@ class MovimientoInventario(models.Model):
     cantidad = models.PositiveIntegerField()
     fecha = models.DateTimeField(default=timezone.now)
     empleado = models.ForeignKey(
-        'Empleado',
+        Empleado,
         on_delete=models.PROTECT,
         null=True, blank=True
     )
     motivo = models.TextField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        # Solo actualizar el stock si el movimiento es nuevo
         if not self.pk:
             if self.tipo == 'entrada':
                 self.producto.stock_actual += self.cantidad
@@ -158,10 +149,8 @@ class MovimientoInventario(models.Model):
             elif self.tipo == 'devolucion':
                 self.producto.stock_actual += self.cantidad
             elif self.tipo == 'ajuste':
-                # En un ajuste, el admin puede ingresar positivo o negativo
                 self.producto.stock_actual += self.cantidad
 
-            # Asegurar que no quede negativo
             if self.producto.stock_actual < 0:
                 self.producto.stock_actual = 0
 
@@ -176,7 +165,9 @@ class MovimientoInventario(models.Model):
         return f"{self.tipo} - {self.producto.nombre} ({self.cantidad})"
 
 
-
+# ==========================================
+# CLIENTES
+# ==========================================
 class Cliente(models.Model):
     TIPO_CHOICES = [
         ('minorista', 'Cliente Minorista'),
@@ -195,7 +186,7 @@ class Cliente(models.Model):
     # Redes sociales
     instagram = models.CharField(max_length=100, blank=True)
     
-    # Info del negocio (para mayoristas)
+    # Info del negocio (mayoristas)
     nombre_negocio = models.CharField(max_length=200, blank=True)
     nit_rut = models.CharField(max_length=50, blank=True)
     
@@ -205,15 +196,58 @@ class Cliente(models.Model):
     def __str__(self):
         return self.nombre
 
-from django.contrib.auth.models import User
 
-class Empleado(models.Model):
+# ==========================================
+# VENTAS
+# ==========================================
+class Venta(models.Model):
+    CANAL_CHOICES = [
+        ('nequi', 'Nequi'),
+        ('daviplata', 'Daviplata'),
+        ('bancolombia', 'Bancolombia'),
+        ('presencial', 'Presencial (Efectivo)'),
+        ('tarjeta', 'Tarjeta'),
+    ]
     
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    fecha = models.DateTimeField(auto_now_add=True)
+    canal_venta = models.CharField(max_length=20, choices=CANAL_CHOICES)
+    empleado = models.ForeignKey(Empleado, on_delete=models.PROTECT)
     
-    telefono = models.CharField(max_length=20, blank=True)
-    fecha_contratacion = models.DateField()
-    activo = models.BooleanField(default=True)
+    # Totales
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    descuento = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    notas = models.TextField(blank=True)
     
     def __str__(self):
-        return f"{self.user.first_name} {self.user.last_name}"
+        return f"Venta #{self.id} - {self.fecha.strftime('%d/%m/%Y')}"
+    
+    class Meta:
+        ordering = ['-fecha']
+
+
+# ==========================================
+# DETALLES DE VENTA
+# ==========================================
+class DetalleVenta(models.Model):
+    venta = models.ForeignKey(Venta, on_delete=models.CASCADE, related_name='detalles')
+    producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
+    
+    cantidad = models.IntegerField()
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    def save(self, *args, **kwargs):
+        self.subtotal = self.cantidad * self.precio_unitario
+        
+        if not self.pk:
+            self.producto.stock_actual -= self.cantidad
+            if self.producto.stock_actual < 0:
+                self.producto.stock_actual = 0
+            self.producto.save()
+        
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.producto.nombre} x{self.cantidad}"

@@ -14,18 +14,16 @@ export default function EmpleadosPage() {
     user: { first_name: "", last_name: "" },
     telefono: "",
     is_staff: false,
-    activo: true,  // ✅ NUEVO
+    activo: true,
   });
   const [loadingEdit, setLoadingEdit] = useState(false);
 
-  // Cargar empleados desde el backend
   const cargarEmpleados = async () => {
     try {
       setError(null);
       setLoading(true);
       console.log("Intentando cargar empleados...");
       
-      // ✅ CAMBIO: Agregar ?activo= para obtener todos (activos e inactivos)
       const res = await inventarioApi.get("/empleados/?activo=");
       console.log("Respuesta completa del servidor:", res.data);
       
@@ -65,7 +63,7 @@ export default function EmpleadosPage() {
       },
       telefono: empleado.telefono || "",
       is_staff: empleado.user.is_staff,
-      activo: empleado.activo,  // ✅ NUEVO
+      activo: empleado.activo,
     });
     setModalEditOpen(true);
   };
@@ -73,11 +71,11 @@ export default function EmpleadosPage() {
   const handleChangeEdit = (e) => {
     const { name, value } = e.target;
     
-    console.log(`Cambiando ${name} a ${value}`);  // ✅ DEBUG
+    console.log(`Cambiando ${name} a ${value}`);
     
     if (name.startsWith("user_")) {
       const fieldName = name.replace("user_", "");
-      console.log(`Actualizando user.${fieldName}`);  // ✅ DEBUG
+      console.log(`Actualizando user.${fieldName}`);
       setFormEditData(prev => ({
         ...prev,
         user: {
@@ -97,7 +95,7 @@ export default function EmpleadosPage() {
     e.preventDefault();
     setLoadingEdit(true);
 
-    console.log("📤 Datos a enviar:", JSON.stringify(formEditData));  // ✅ DEBUG
+    console.log("🤝 Datos a enviar:", JSON.stringify(formEditData));
 
     try {
       const response = await inventarioApi.put(`/empleados/${empleadoEditando.id}/`, formEditData);
@@ -132,29 +130,27 @@ export default function EmpleadosPage() {
       {loading && <p className="cargando">Cargando empleados...</p>}
       {error && <p className="error">❌ {error}</p>}
 
-      {/* Botón para agregar */}
       <div className="acciones-superiores">
         <button className="btn-agregar" onClick={handleAgregar}>
           ➕ Agregar Empleado
         </button>
       </div>
 
-      {/* DEBUG: Mostrar datos */}
       {!loading && (
         <p style={{ color: '#666', marginBottom: '10px' }}>
           Total empleados: {empleados.length}
         </p>
       )}
 
-      {/* Tabla */}
       {!loading && empleados && empleados.length > 0 && (
         <table className="tabla-empleados">
           <thead>
             <tr>
               <th>#</th>
               <th>Nombre</th>
+              <th>Usuario</th>
               <th>Teléfono</th>
-              <th>Rol de Usuario</th>
+              <th>Rol</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -165,15 +161,16 @@ export default function EmpleadosPage() {
               <tr key={e.id}>
                 <td>{idx + 1}</td>
                 <td>{e.user.first_name} {e.user.last_name}</td>
+                <td>{e.user.username}</td>
                 <td>{e.telefono || "—"}</td>
                 <td>
-                  <span className="rol-badge">
-                    {e.user.is_staff ? "Admin" : "Usuario"}
+                  <span className={`rol-badge ${e.user.is_staff ? 'admin' : 'usuario'}`}>
+                    {e.user.is_staff ? "👨‍💼 Admin" : "👤 Usuario"}
                   </span>
                 </td>
                 <td>
                   <span className={`estado ${e.activo ? "activo" : "inactivo"}`}>
-                    {e.activo ? "Activo" : "Inactivo"}
+                    {e.activo ? "✅ Activo" : "❌ Inactivo"}
                   </span>
                 </td>
                 <td className="acciones">
@@ -202,14 +199,12 @@ export default function EmpleadosPage() {
         <p className="sin-datos">No hay empleados registrados. ¡Crea uno nuevo!</p>
       )}
 
-      {/* Modal para agregar empleado */}
       <AgregarEmpleadoModal 
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onEmpleadoAgregado={cargarEmpleados}
       />
 
-      {/* Modal para editar empleado */}
       {modalEditOpen && (
         <div className="modal-overlay" onClick={() => setModalEditOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -219,7 +214,6 @@ export default function EmpleadosPage() {
             </div>
 
             <form onSubmit={handleSubmitEdit} className="modal-form">
-              {/* Campo usuario */}
               <div className="form-group">
                 <label htmlFor="user_username">Usuario</label>
                 <input
@@ -232,7 +226,6 @@ export default function EmpleadosPage() {
                 />
               </div>
 
-              {/* Campo nombre */}
               <div className="form-group">
                 <label htmlFor="user_first_name">Nombre *</label>
                 <input
@@ -246,7 +239,6 @@ export default function EmpleadosPage() {
                 />
               </div>
 
-              {/* Campo apellido */}
               <div className="form-group">
                 <label htmlFor="user_last_name">Apellido *</label>
                 <input
@@ -260,7 +252,6 @@ export default function EmpleadosPage() {
                 />
               </div>
 
-              {/* Campo teléfono */}
               <div className="form-group">
                 <label htmlFor="telefono">Teléfono</label>
                 <input
@@ -273,7 +264,6 @@ export default function EmpleadosPage() {
                 />
               </div>
 
-              {/* Campo contraseña */}
               <div className="form-group">
                 <label htmlFor="user_password">Contraseña (dejar vacío para no cambiar)</label>
                 <input
@@ -286,7 +276,6 @@ export default function EmpleadosPage() {
                 />
               </div>
 
-              {/* Rol de Usuario */}
               <div className="form-group">
                 <label htmlFor="is_staff">Rol de Usuario</label>
                 <select
@@ -311,7 +300,6 @@ export default function EmpleadosPage() {
                 </select>
               </div>
 
-              {/* Estado */}
               <div className="form-group">
                 <label htmlFor="activo">Estado</label>
                 <select
@@ -336,7 +324,6 @@ export default function EmpleadosPage() {
                 </select>
               </div>
 
-              {/* Botones */}
               <div className="modal-buttons">
                 <button
                   type="button"
@@ -351,7 +338,7 @@ export default function EmpleadosPage() {
                   className="btn-guardar"
                   disabled={loadingEdit}
                 >
-                  {loadingEdit ? "Guardando..." : "✓ Actualizar"}
+                  {loadingEdit ? "Guardando..." : "✔ Actualizar"}
                 </button>
               </div>
             </form>

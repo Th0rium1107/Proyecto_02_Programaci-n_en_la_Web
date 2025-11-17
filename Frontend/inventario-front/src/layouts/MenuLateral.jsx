@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import "./menu.css";
 
 export default function MenuLateral() {
-  const { user, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
   
   const nombre = user
     ? `${user.first_name || "Usuario"} ${user.last_name || ""}`
@@ -28,15 +28,28 @@ export default function MenuLateral() {
           <div className="avatar">🐱</div>
           <h3>¡Hola!</h3>
           <p className="nombre">{nombre}</p>
-          <span className="rol">Administrador(a)</span>
+          <span className="rol">{isAdmin ? "Administrador(a)" : "Empleado(a)"}</span>
         </div>
 
         <nav className="menu-opciones">
-          <Link to="/clientes" className="opcion">👤 Clientes</Link>
-          <Link to="/empleados" className="opcion">🧑‍💼 Empleados</Link>
-          <Link to="/productos" className="opcion">🛒 Productos</Link>
-          <Link to="/ventas" className="opcion">💵 Ventas</Link>
-          <Link to="/reportes" className="opcion">📊 Reporte Ventas</Link>
+          {/* Menú para ADMIN - acceso total */}
+          {isAdmin ? (
+            <>
+              <Link to="/clientes" className="opcion">👤 Clientes</Link>
+              <Link to="/empleados" className="opcion">💼 Empleados</Link>
+              <Link to="/productos" className="opcion"> 🛒Productos</Link>
+              <Link to="/categorias" className="opcion">📁 Categorías</Link>
+              <Link to="/colecciones" className="opcion">🎨 Colecciones</Link>
+              <Link to="/ventas" className="opcion">💵 Ventas</Link>
+              <Link to="/reportes" className="opcion">📊 Reportes</Link>
+            </>
+          ) : (
+            <>
+              {/* Menú para USUARIO - solo clientes y ventas */}
+              <Link to="/clientes" className="opcion">👤 Clientes</Link>
+              <Link to="/ventas" className="opcion">💵 Ventas</Link>
+            </>
+          )}
         </nav>
 
         {/* Botón de logout */}
@@ -54,7 +67,9 @@ export default function MenuLateral() {
           <div className="top-right">
             <p>{fecha}</p>
             <p>{hora}</p>
-            <span className="admin-tag">ADMIN</span>
+            <span className={`role-tag ${isAdmin ? 'admin' : 'empleado'}`}>
+              {isAdmin ? "👨‍💼 ADMIN" : "👤 EMPLEADO"}
+            </span>
           </div>
         </header>
 

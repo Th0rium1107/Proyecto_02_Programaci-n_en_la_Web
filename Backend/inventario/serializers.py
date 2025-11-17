@@ -1,28 +1,26 @@
 from rest_framework import serializers
 from .models import (
-    Categoria, Coleccion, Producto, 
-    Venta, DetalleVenta, MovimientoInventario, 
+    Categoria, Coleccion, Producto,
+    Venta, DetalleVenta, MovimientoInventario,
     Cliente, Empleado
 )
 from django.contrib.auth.models import User
 
-# --- SERIALIZERS DE CATÁLOGOS ---
 
+# ==========================================
+# CATEGORÍAS, COLECCIONES, PRODUCTOS
+# ==========================================
 class CategoriaSerializer(serializers.ModelSerializer):
-    """Serializer para Categoria (CRUD básico)"""
     class Meta:
         model = Categoria
         fields = '__all__'
 
 
 class ColeccionSerializer(serializers.ModelSerializer):
-    """Serializer para Coleccion (CRUD básico)"""
     class Meta:
         model = Coleccion
         fields = '__all__'
 
-
-# --- SERIALIZER DE PRODUCTO ---
 
 class ProductoSerializer(serializers.ModelSerializer):
     categoria_nombre = serializers.CharField(source='categoria.nombre', read_only=True)
@@ -30,66 +28,67 @@ class ProductoSerializer(serializers.ModelSerializer):
     
     stock_bajo = serializers.BooleanField(read_only=True)
     sin_stock = serializers.BooleanField(read_only=True)
+    estado = serializers.CharField(read_only=True)
+    
+    # Campos adicionales para colores
+    lista_colores = serializers.ListField(read_only=True)
+    cantidad_colores = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Producto
         fields = (
             'id', 'nombre', 'categoria', 'categoria_nombre', 'coleccion', 
-            'coleccion_nombre', 'tallas', 'descripcion', 'imagen', 
-            'precio_unitario', 'stock_actual', 'stock_minimo', 
+            'coleccion_nombre', 'tallas', 'colores', 'lista_colores', 'cantidad_colores',
+            'descripcion', 'imagen', 'precio_unitario', 'stock_actual', 'stock_minimo', 
             'fecha_creacion', 'fecha_actualizacion', 'activo',
-            'stock_bajo', 'sin_stock'
+            'stock_bajo', 'sin_stock', 'estado'
         )
-        read_only_fields = ('stock_actual', 'fecha_creacion', 'fecha_actualizacion')
+        read_only_fields = ('fecha_creacion', 'fecha_actualizacion')
 
 
-# --- SERIALIZERS DE PERSONAS ---
-
+# ==========================================
+# CLIENTES Y EMPLEADOS
+# ==========================================
 class ClienteSerializer(serializers.ModelSerializer):
-    """Serializer para Cliente (CRUD básico)"""
     class Meta:
         model = Cliente
         fields = '__all__'
 
 
-# Serializer anidado para el User de Django
 class UserSerializer(serializers.ModelSerializer):
-    """Muestra solo los campos importantes del User de Django"""
     class Meta:
         model = User
         fields = ('id', 'first_name', 'last_name', 'email', 'is_staff', 'username')
 
 
 class EmpleadoSerializer(serializers.ModelSerializer):
-    """Serializer para Empleado, incluyendo los detalles del User"""
     user = UserSerializer(read_only=True)
-    
-    # Campo para construir el nombre completo
     nombre_completo = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Empleado
         fields = ('id', 'user', 'telefono', 'fecha_contratacion', 'activo', 'nombre_completo')
-        read_only_fields = ('fecha_contratacion',)
-        
+
     def get_nombre_completo(self, obj):
-        """Método para obtener el nombre completo del empleado"""
         return f"{obj.user.first_name} {obj.user.last_name}"
 
 
+# ==========================================
+# MOVIMIENTOS DE INVENTARIO
+# ==========================================
 class MovimientoInventarioSerializer(serializers.ModelSerializer):
-    """Serializer para registrar movimientos de inventario (Entradas/Ajustes)"""
-    
     producto_nombre = serializers.CharField(source='producto.nombre', read_only=True)
     empleado_nombre = serializers.CharField(source='empleado.user.get_full_name', read_only=True)
-    
+
     class Meta:
         model = MovimientoInventario
         fields = '__all__'
         read_only_fields = ('fecha',)
 
 
-#Este es el serializer de los productos dentro de una venta
+# ==========================================
+# DETALLES Y VENTAS
+# ==========================================
 class DetalleVentaSerializer(serializers.ModelSerializer):
     producto_nombre = serializers.CharField(source='producto.nombre', read_only=True)
 
@@ -103,27 +102,28 @@ class DetalleVentaSerializer(serializers.ModelSerializer):
 
 class VentaSerializer(serializers.ModelSerializer):
     detalles = DetalleVentaSerializer(many=True, read_only=True)
-    cliente_nombre = serializers.CharField(source='cliente.nombre', read_only=True)
     empleado_nombre = serializers.CharField(source='empleado.user.get_full_name', read_only=True)
 
     class Meta:
         model = Venta
         fields = [
-            'id', 'fecha', 'canal_venta', 'cliente', 'cliente_nombre',
+            'id', 'fecha', 'canal_venta',
             'empleado', 'empleado_nombre',
             'subtotal', 'descuento', 'total',
             'notas', 'detalles'
         ]
 
 
-#Serializer especial para crear una venta
+# ==========================================
+# CREAR VENTA (incluye detalles)
+# ==========================================
 class CrearVentaSerializer(serializers.ModelSerializer):
     detalles = DetalleVentaSerializer(many=True)
 
     class Meta:
         model = Venta
         fields = [
-            'canal_venta', 'cliente', 'empleado',
+            'canal_venta', 'empleado',
             'subtotal', 'descuento', 'total',
             'notas', 'detalles'
         ]

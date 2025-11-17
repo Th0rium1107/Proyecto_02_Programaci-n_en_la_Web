@@ -43,7 +43,7 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  font-size: 14px;  /* ✅ Reducir tamaño de fuente */
+  font-size: 14px;
 }
 
 .tabla-empleados thead {
@@ -53,16 +53,16 @@
 }
 
 .tabla-empleados th {
-  padding: 12px 8px;  /* ✅ Reducir padding */
+  padding: 12px 8px;
   text-align: left;
   border-bottom: 2px solid #0a8a6a;
-  font-size: 13px;  /* ✅ Fuente más pequeña */
+  font-size: 13px;
 }
 
 .tabla-empleados td {
-  padding: 10px 8px;  /* ✅ Reducir padding */
+  padding: 10px 8px;
   border-bottom: 1px solid #e0e0e0;
-  font-size: 13px;  /* ✅ Fuente más pequeña */
+  font-size: 13px;
 }
 
 .tabla-empleados tbody tr:hover {
@@ -73,23 +73,82 @@
   border-bottom: none;
 }
 
-/* Estado badge */
-.estado {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 600;
+/* ===== BADGE DE USUARIO ===== */
+.usuario-badge {
   display: inline-block;
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border-left: 4px solid #1565c0;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+}
+
+/* ===== BADGES DE ROL ===== */
+.rol-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.rol-badge.usuario {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  color: #2e7d32;
+  border: 2px solid #66bb6a;
+}
+
+.rol-badge.usuario:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25);
+}
+
+.rol-badge.admin {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  color: #e65100;
+  border: 2px solid #ffb74d;
+}
+
+.rol-badge.admin:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(230, 81, 0, 0.25);
+}
+
+/* ===== ESTADO BADGE ===== */
+.estado {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .estado.activo {
-  background: #c8e6c9;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
   color: #2e7d32;
+  border: 2px solid #66bb6a;
+}
+
+.estado.activo:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25);
 }
 
 .estado.inactivo {
-  background: #ffcccc;
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
   color: #c62828;
+  border: 2px solid #ef5350;
+}
+
+.estado.inactivo:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(198, 40, 40, 0.25);
 }
 
 /* Acciones */
@@ -147,4 +206,24 @@
   margin-bottom: 20px;
   border-left: 4px solid #d32f2f;
   font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tabla-empleados {
+    font-size: 12px;
+  }
+
+  .tabla-empleados th,
+  .tabla-empleados td {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  .usuario-badge,
+  .rol-badge,
+  .estado {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
 }

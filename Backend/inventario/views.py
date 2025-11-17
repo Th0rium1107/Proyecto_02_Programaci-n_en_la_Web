@@ -24,10 +24,10 @@ from .serializers import (
 
 
 # ==================== AUTENTICACIÓN PERSONALIZADA ====================
-class CustomTokenObtainPairSerializer(serializers.Serializer):
-    """Serializer personalizado que verifica si el empleado está activo"""
-    username = serializers.CharField()
-    password = serializers.CharField(write_only=True)
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Serializer personalizado que incluye is_staff en el token"""
     
     def validate(self, attrs):
         username = attrs.get('username')
@@ -48,12 +48,22 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
             if not user.is_superuser:
                 raise serializers.ValidationError("No tienes permisos para acceder")
         
-        refresh = RefreshToken.for_user(user)
+        # Llamar al validate original de TokenObtainPairSerializer
+        data = super().validate(attrs)
         
-        return {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        }
+        return data
+    
+    @classmethod
+    def get_token(cls, user):
+        """Personalizar el token para incluir is_staff"""
+        token = super().get_token(user)
+        
+        # Agregar campos personalizados al token
+        token['is_staff'] = user.is_staff
+        token['first_name'] = user.first_name
+        token['last_name'] = user.last_name
+        
+        return token
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -61,26 +71,53 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 
+# ==================== PERMISOS PERSONALIZADOS ====================
+class IsAdmin(IsAuthenticated):
+    """Permiso solo para administradores"""
+    def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+        
+        try:
+            empleado = request.user.empleado
+            return empleado.user.is_staff
+        except Empleado.DoesNotExist:
+            return request.user.is_superuser
+
+
+class IsEmpleado(IsAuthenticated):
+    """Permiso solo para empleados (tanto admin como usuario)"""
+    def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+        
+        try:
+            empleado = request.user.empleado
+            return empleado.activo
+        except Empleado.DoesNotExist:
+            return request.user.is_superuser
+
+
 # ==================== VIEWSETS ====================
 class CategoriaViewSet(viewsets.ModelViewSet):
     """Permite el CRUD de las categorías de productos."""
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdmin]  # Solo admin
 
 
 class ColeccionViewSet(viewsets.ModelViewSet):
     """Permite el CRUD de las colecciones."""
     queryset = Coleccion.objects.all()
     serializer_class = ColeccionSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdmin]  # Solo admin
 
 
 class ProductoViewSet(viewsets.ModelViewSet):
     """Permite el CRUD de los productos y filtros para stock bajo."""
     queryset = Producto.objects.filter(activo=True).order_by('nombre')
     serializer_class = ProductoSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdmin]  # Solo admin
     filterset_class = ProductoFilter
 
     def get_queryset(self):
@@ -96,18 +133,31 @@ class ClienteViewSet(viewsets.ModelViewSet):
     """Permite el CRUD de clientes (mayoristas/internacionales)."""
     queryset = Cliente.objects.filter(activo=True).order_by('nombre')
     serializer_class = ClienteSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # Cualquier usuario autenticado
+    
+    def get_permissions(self):
+        """
+        Permitir crear (POST), leer (GET) y eliminar (DELETE) a todos los empleados.
+        Solo admin puede editar (PUT, PATCH).
+        """
+        if self.request.method in ['PUT', 'PATCH']:
+            # Solo admin puede editar
+            permission_classes = [IsAdmin]
+        else:
+            # Todos los empleados pueden crear, leer y eliminar
+            permission_classes = [IsAuthenticated]
+        
+        return [permission() for permission in permission_classes]
 
 
 class EmpleadoViewSet(viewsets.ModelViewSet):
     """
     ViewSet para manejar empleados.
-    Permite crear, listar, actualizar y eliminar empleados.
+    Solo admin puede ver, crear, editar y eliminar empleados.
     """
-    # ✅ CAMBIO: Mostrar todos los empleados (activos e inactivos)
     queryset = Empleado.objects.all().order_by('user__first_name')
     serializer_class = EmpleadoSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdmin]  # Solo admin
 
     def create(self, request, *args, **kwargs):
         """
@@ -134,7 +184,7 @@ class EmpleadoViewSet(viewsets.ModelViewSet):
                 first_name=user_data.get('first_name', ''),
                 last_name=user_data.get('last_name', ''),
                 password=user_data['password'],
-                is_staff=False
+                is_staff=empleado_data.get('is_staff', False)
             )
             
             empleado = Empleado.objects.create(
@@ -205,9 +255,22 @@ class EmpleadoViewSet(viewsets.ModelViewSet):
 class VentaViewSet(viewsets.ModelViewSet):
     """
     Permite el CRUD de ventas.
+    Solo admin puede editar y eliminar, todos los empleados pueden crear.
     """
     queryset = Venta.objects.all().order_by('-fecha')
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsEmpleado]  # Todos los empleados
+    
+    def get_permissions(self):
+        """
+        Permitir crear (POST) a todos los empleados,
+        pero solo admin puede editar (PUT, PATCH) y eliminar (DELETE)
+        """
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            permission_classes = [IsAdmin]
+        else:
+            permission_classes = [IsEmpleado]
+        
+        return [permission() for permission in permission_classes]
     
     def get_serializer_class(self):
         if self.action == 'create' or self.action in ['update', 'partial_update']:
@@ -218,7 +281,8 @@ class VentaViewSet(viewsets.ModelViewSet):
 class MovimientoInventarioViewSet(viewsets.ModelViewSet):
     """
     Permite registrar entradas de stock, ajustes y devoluciones.
+    Solo admin puede hacer esto.
     """
     queryset = MovimientoInventario.objects.all().order_by('-fecha')
     serializer_class = MovimientoInventarioSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdmin]  # Solo admin

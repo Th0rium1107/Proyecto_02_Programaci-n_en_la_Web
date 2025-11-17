@@ -37,7 +37,7 @@ const MenuPage = () => {
             👧‍💼 Empleados
           </Link>
           <Link to="/productos" className="opcion">
-            🛍 Productos
+            🛒 Productos
           </Link>
           <Link to="/ventas" className="opcion">
             💵 Ventas

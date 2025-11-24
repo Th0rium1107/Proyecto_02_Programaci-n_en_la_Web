@@ -9,6 +9,7 @@ import EmpleadosPage from './pages/EmpleadosPage';
 import ProductosPage from './pages/ProductosPage';
 import CategoriasPage from './pages/CategoriasPage';
 import ColeccionesPage from './pages/ColeccionesPage';
+import VentasPage from "./pages/VentasPage";  
 
 // Componente para proteger las rutas
 const PrivateRoute = ({ children }) => {
@@ -54,10 +55,11 @@ const AccesoDenegado = () => (
 function App() {
     return (
         <Routes>
+
             {/* Login sin protección */}
             <Route path="/login" element={<LoginPage />} />
 
-            {/* Layout principal con menú lateral */}
+            {/* Rutas con menú y protección */}
             <Route 
                 path="/" 
                 element={
@@ -66,6 +68,7 @@ function App() {
                     </PrivateRoute>
                 }
             >
+
                 {/* Home */}
                 <Route 
                     index 
@@ -77,21 +80,17 @@ function App() {
                     } 
                 />
 
-                {/* Rutas accesibles para todos */}
+                {/* Rutas accesibles para todos los empleados */}
                 <Route path="clientes" element={<ClientesPage />} />
+
+                {/* 💵 AQUÍ SE INSERTA LA NUEVA RUTA REAL DE VENTAS */}
                 <Route 
                     path="ventas" 
-                    element={
-                        <div style={{ padding: '20px' }}>
-                            <h2>💵 Ventas</h2>
-                            <p>Gestión de ventas ✓</p>
-                        </div>
-                    } 
+                    element={<VentasPage />}   // <--- YA ESTÁ LISTO
                 />
 
                 {/* --- Rutas EXCLUSIVAS para admin --- */}
 
-                {/* Empleados */}
                 <Route 
                     path="empleados" 
                     element={
@@ -101,7 +100,6 @@ function App() {
                     } 
                 />
 
-                {/* Productos */}
                 <Route 
                     path="productos" 
                     element={
@@ -112,24 +110,23 @@ function App() {
                 />
 
                 <Route 
-                path="categorias" 
-                element={
-                    <AdminRoute>
-                    <CategoriasPage />
-                    </AdminRoute>
-                } 
+                    path="categorias" 
+                    element={
+                        <AdminRoute>
+                            <CategoriasPage />
+                        </AdminRoute>
+                    } 
                 />
 
                 <Route 
-                path="colecciones" 
-                element={
-                    <AdminRoute>
-                    <ColeccionesPage />
-                    </AdminRoute>
-                } 
+                    path="colecciones" 
+                    element={
+                        <AdminRoute>
+                            <ColeccionesPage />
+                        </AdminRoute>
+                    } 
                 />
 
-                {/* Reportes */}
                 <Route 
                     path="reportes" 
                     element={
@@ -142,8 +139,8 @@ function App() {
                     } 
                 />
 
-                {/* Acceso denegado */}
                 <Route path="acceso-denegado" element={<AccesoDenegado />} />
+
             </Route>
 
             {/* Catch-all */}

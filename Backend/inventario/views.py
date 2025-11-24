@@ -10,6 +10,12 @@ from django.contrib.auth import authenticate
 from django.db.models import F
 from datetime import date
 from .filters import ProductoFilter
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.models import User
 
 from .models import (
     Categoria, Coleccion, Producto, 
@@ -250,6 +256,21 @@ class EmpleadoViewSet(viewsets.ModelViewSet):
             {"detail": "Empleado y usuario eliminados correctamente"},
             status=status.HTTP_204_NO_CONTENT
         )
+    @action(detail=False, methods=['get'], url_path='me', permission_classes=[IsEmpleado])
+    def me(self, request):
+        """
+        Devuelve el empleado asociado al usuario autenticado.
+        """
+        try:
+            empleado = Empleado.objects.get(user=request.user)
+        except Empleado.DoesNotExist:
+            return Response(
+                {'detail': 'No hay empleado asociado a este usuario'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = self.get_serializer(empleado)
+        return Response(serializer.data)
 
 
 class VentaViewSet(viewsets.ModelViewSet):
@@ -286,3 +307,60 @@ class MovimientoInventarioViewSet(viewsets.ModelViewSet):
     queryset = MovimientoInventario.objects.all().order_by('-fecha')
     serializer_class = MovimientoInventarioSerializer
     permission_classes = [IsAdmin]  # Solo admin
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def google_login(request):
+    credential = request.data.get("credential")
+
+    if not credential:
+        return Response({"error": "No se recibió token de Google"}, status=400)
+
+    try:
+        # Validar token con Google
+        idinfo = id_token.verify_oauth2_token(
+            credential,
+            google_requests.Request(),
+            "857285179730-h99ak9m8ve72m1ssj2g0u690kk89a03c.apps.googleusercontent.com"
+        )
+
+        email = idinfo.get("email")
+        name = idinfo.get("name", "")
+
+        # Buscar usuario por email
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Solo administradores registrados pueden iniciar sesión."},
+                status=403
+            )
+
+        # Verificar que sea admin
+        if not user.is_staff:
+            return Response(
+                {"error": "No tienes permisos para acceder."},
+                status=403
+            )
+
+        # Crear empleado si no existe
+        from .models import Empleado
+        empleado, created = Empleado.objects.get_or_create(
+            user=user,
+            defaults={"telefono": "000", "activo": True}
+        )
+
+        # Generar JWT
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "is_admin": user.is_staff,
+            "name": user.first_name,
+        })
+
+    except Exception as e:
+        print(e)
+        return Response({"error": "Token inválido"}, status=400)
